@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Blockchain Voting</title>
+    <script src="https://cdn.jsdelivr.net/npm/web3/dist/web3.min.js"></script>
+</head>
+<body>
+    <h1>Blockchain Voting</h1>
+    <div id="candidates"></div>
+    <button onclick="vote(1)">Vote for Alice</button>
+    <button onclick="vote(2)">Vote for Bob</button>
+
+    <script>
+        let web3 = new Web3(Web3.givenProvider || "http://localhost:7545");
+        
+        let contractAddress = "0x379f26428bEFe9EFeca15739CB8c0DcE458c53D4"; // Paste the deployed contract address here
+        let contractABI = [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "candidateId",
+          "type": "uint256"
+        }
+      ],
+      "name": "votedEvent",
+      "type": "event"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "candidates",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "id",
+          "type": "uint256"
+        },
+        {
+          "internalType": "string",
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "voteCount",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [],
+      "name": "candidatesCount",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "voters",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function",
+      "constant": true
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "_candidateId",
+          "type": "uint256"
+        }
+      ],
+      "name": "vote",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    }
+  ];
+
+        let votingContract = new web3.eth.Contract(contractABI, contractAddress);
+
+        async function vote(candidateId) {
+            let accounts = await web3.eth.requestAccounts();
+            votingContract.methods.vote(candidateId).send({ from: accounts[0] });
+        }
+
+        async function loadCandidates() {
+            let candidatesCount = await votingContract.methods.candidatesCount().call();
+            let candidatesDiv = document.getElementById('candidates');
+            for (let i = 1; i <= candidatesCount; i++) {
+                let candidate = await votingContract.methods.candidates(i).call();
+                candidatesDiv.innerHTML += `<p>${candidate.name}: ${candidate.voteCount} votes</p>`;
+            }
+        }
+
+        loadCandidates();
+    </script>
+</body>
+</html>
